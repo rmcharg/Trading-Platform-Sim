@@ -19,16 +19,7 @@ Session(app)
 def index():
     return render_template("index.html")
 
-@app.route("/login", methods=["GET", "POST"])
-def login ():
-    """Log user in"""
 
-    # forget user_id from previous log in
-    return render_template("login.html")
-
-@app.route("/register", methods=["GET", "POST"])
-def register():
-    return render_template("register.html")
 
 @app.route("/portfolio")
 @login_required

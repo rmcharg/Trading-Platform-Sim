@@ -1,5 +1,10 @@
 from flask import Flask
 from flask_session import Session
+from os import path
+import sqlite3
+
+DATABASE_NAME = 'flaskr/trade.db'
+CREATE_TABLES = "flaskr/schema.sql"
 
 
 def create_app():
@@ -17,3 +22,19 @@ def create_app():
     app.register_blueprint(auth, url_prefix='/')
     
     return app
+
+def create_database():
+    if not path.exists(DATABASE_NAME):
+        print('Database does not exist! Creating database.')
+        db = sqlite3.connect(DATABASE_NAME).cursor()
+        
+        with open(CREATE_TABLES) as f:
+            sql_script = f.read()
+        
+        print('Initialising database tables!')
+        db.executescript(sql_script)
+    else:
+        print('Database exists, connecting!')
+        db = sqlite3.connect(DATABASE_NAME).cursor()
+
+    return db
