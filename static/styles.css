@@ -1,0 +1,18 @@
+.navbar-brand {
+    font-size: xx-large;
+    color: white;
+}
+
+.navbar-brand:hover {
+    color: grey;
+}
+
+body {
+    background-color:#2b3137;
+    color: white;
+}
+
+.navbar-custom {
+    background-color: #24292e;
+    color: white;
+}
