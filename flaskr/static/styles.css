@@ -8,12 +8,12 @@
 }
 
 body {
-    background-color:#2b3137;
+    background-color:rgb(14, 17, 24);
     color: white;
 }
 
 .navbar-custom {
-    background-color: #24292e;
+    background-color: rgb(39, 39, 49);
     color: white;
 }
 
