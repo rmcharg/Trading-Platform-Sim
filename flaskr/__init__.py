@@ -14,6 +14,7 @@ def create_app():
     # Configure sessions to use filesystem 
     app.config["SESSION_PERMANENT"] = False
     app.config["SESSION_TYPE"] = "filesystem"
+    app.config["SESSION_COOKIE_PATH"] = "/"
     Session(app)
 
     from .views import views
@@ -24,6 +25,8 @@ def create_app():
     return app
 
 def create_database():
+    # If database does not exist create it with schema from file
+    # if it does exist the connect to it.
     if not path.exists(DATABASE_NAME):
         print('Database does not exist! Creating database.')
         db = sqlite3.connect(DATABASE_NAME).cursor()
