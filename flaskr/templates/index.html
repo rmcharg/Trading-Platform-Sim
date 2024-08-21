@@ -42,7 +42,7 @@
 
 <script type="text/javascript">
     async function GetUpdates() {
-        let response = await fetch('/get_data');
+        let response = await fetch('/get_dashboard_data');
         let data = await response.json();
         let html = '';
         for (let id in data) {
