@@ -2,3 +2,4 @@ __pycache__
 trade_venv
 test.py
 flask_session/
+sqliterc

@@ -1,5 +1,24 @@
 {% extends "layout.html" %}
 
 {% block main %}
-<h1>This will be the users transactions page</h1>
+<table class="table table-striped table-dark" >
+    <thead>
+        <tr>
+            <th class="text-start">Symbol</th>
+            <th class="text-end">Shares</th>
+            <th class="text-end">Price</th>
+            <th class="text-end">Transacted</th>
+        </tr>
+    </thead>
+   <tbody>
+    {% for transaction in transactions %}
+    <tr>
+        <td class="text-start">{{ transaction['symbol'] }}</td>
+        <td class="text-end"> {{ transaction['shares'] }}</td>
+        <td class="text-end"> {{ transaction['price'] }}</td>
+        <td class="text-end"> {{ transaction['datetime'] }}</td>
+    </tr>
+    {% endfor %}
+</tbody>
+</table>
 {% endblock %}

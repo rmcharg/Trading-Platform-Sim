@@ -133,5 +133,23 @@ def add_transaction(id, symbol, shares, price, time, type):
 
         conn.commit()
     
+def get_user_transactions(id):
+    """Get all of the transactions of the user.
+        
+        inputs:
+            - id: users unique id
+        
+        returns:
+            - list of dicts where each dict contains an individual transactions
+                info."""
+    conn = sqlite3.connect(DATABASE_NAME)
+    conn.row_factory = sqlite3.Row
+    cur = conn.cursor()
+    transactions =cur.execute(
+         "SELECT symbol, shares, price, datetime FROM transactions WHERE user_id = ?",
+        (id,)).fetchall()
+    
+    return transactions
+
 
     

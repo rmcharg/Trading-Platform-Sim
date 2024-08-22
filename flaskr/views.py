@@ -1,6 +1,6 @@
 from flask import Blueprint, render_template, request, session, jsonify, flash, redirect
 from flaskr.helpers import login_required, get_stock, get_user_portfolio, get_user_cash, add_transaction
-from flaskr.helpers import update_user_cash
+from flaskr.helpers import update_user_cash, get_user_transactions
 from datetime import datetime
 import yfinance as yf
 import pandas as pd
@@ -94,7 +94,8 @@ def sell():
 @views.route("/transactions")
 @login_required
 def transactions():
-    return render_template("transactions.html")
+    transactions = get_user_transactions(session['user_id'])
+    return render_template("transactions.html", transactions=transactions)
 
 @views.route('/get_dashboard_data')
 @login_required
