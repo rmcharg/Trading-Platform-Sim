@@ -19,8 +19,15 @@ def login_required(orig_func):
     
     return decorated_function
 
+
 def get_user_cash(id):
-        """Get user cash from the database"""
+        """Get user cash from the database.
+        
+        inputs: 
+            - id: the users id in the database
+        returns:
+            - the current cash balance of the users account
+        """
         conn = sqlite3.connect(DATABASE_NAME)
         conn.row_factory = sqlite3.Row
         cur = conn.cursor()
@@ -29,13 +36,31 @@ def get_user_cash(id):
 
         return cash 
 
+
 def update_user_cash(id, cash):
+        """Update the users cash balance in the database.
+        
+        inputs:
+            - id: the users unique account id in the database
+            - cash: the users new cash balance
+        
+        returns: None
+        """
         conn = sqlite3.connect(DATABASE_NAME)
         cur = conn.cursor()
         cur.execute("UPDATE users SET cash = ? WHERE id = ?", (cash, id))
         conn.commit()
 
+
 def get_stock(symbol):
+    """Get the current price of the stock.
+    
+    inputs:
+        - symbol: the stocks ticker symbol
+    
+    returns:
+        - dict containing the price and the symbol
+    """
     try:
         ticker = yf.Ticker(symbol)
     except:
@@ -45,7 +70,20 @@ def get_stock(symbol):
     current_price = stock_data.iloc[-1].Close
     return {"price": current_price, "symbol": symbol}
 
+
 def get_user_portfolio(id):
+    """Get a summary of users portfolio data.
+    
+        This function will return the users stock holdings and their current
+        value as well as the total portfolio value and cash balance
+        
+        inputs:
+            - id: user unique id in database
+        
+        returns:
+            - dict containing the stock holdings stored in a dict themselves,
+                the cash balance and the total portfolio value
+    """
     conn = sqlite3.connect(DATABASE_NAME)
     conn.row_factory = sqlite3.Row
     cur = conn.cursor()
@@ -68,11 +106,23 @@ def get_user_portfolio(id):
         stocks.append(stock)
     
     cash = round(get_user_cash(id),2)
-    portfolio_value = round(portfolio_value, 2)
+    portfolio_value = round(portfolio_value, 2) + cash
 
     return {'stocks': stocks, 'cash': cash, 'value': portfolio_value}
 
+
 def add_transaction(id, symbol, shares, price, time, type):
+        """Add record of transaction to database.
+        
+        inputs:
+            - id: user unique id
+            - symbol: stock being bought/sold
+            - shares: number of shares bought/sold
+            - time: date and time of transaction
+            - type: the type of transaction (buy or sell)
+        
+        returns: None
+        """
         conn = sqlite3.connect(DATABASE_NAME)
         conn.row_factory = sqlite3.Row
         cur = conn.cursor()
