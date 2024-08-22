@@ -1,6 +1,6 @@
 from flask import Blueprint, render_template, request, session, jsonify, flash, redirect
 from flaskr.helpers import login_required, get_stock, get_user_portfolio, get_user_cash, add_transaction
-from flaskr.helpers import update_user_cash, get_user_transactions
+from flaskr.helpers import update_user_cash, get_user_transactions, add_user_holdings
 from datetime import datetime
 import yfinance as yf
 import pandas as pd
@@ -64,7 +64,7 @@ def buy():
             flash('Invalid Symbol')
             return redirect("/buy")
 
-        # connect to database to get user budget
+        # Check user can afford transaction
         cash = get_user_cash(id)
         price = stock['price']
         transaction_cost = price * shares
@@ -76,12 +76,13 @@ def buy():
         # Get date and time (ISO 8601 format) and insert transaction record into db
         time = datetime.now().strftime("%d-%m-%Y %H:%M:%S")
         user_id = session["user_id"]
-        add_transaction(user_id, symbol, shares, price, time, 'Buy')
+        add_transaction(user_id, symbol, shares, transaction_cost, time, 'Buy')
+
+        # Update user holdings
+        add_user_holdings(user_id, symbol, shares, price)
 
         # Update cash in users table
-        new_cash = cash - transaction_cost
-        update_user_cash(session['user_id'],new_cash)
-
+        update_user_cash(id, transaction_cost, action="remove")
         return redirect("/portfolio")
 
 
