@@ -1,4 +1,4 @@
-from flask import redirect, session
+from flask import redirect, session, flash
 from functools import wraps
 import yfinance as yf
 import sqlite3
@@ -8,7 +8,6 @@ DATABASE_NAME = 'flaskr/trade.db'
 
 # Decorator for routes so that is login is required
 def login_required(orig_func):
-
     # use wraps so that the decorated function still has the route name
     @wraps(orig_func)
     def decorated_function(*args, **kwargs):
@@ -28,6 +27,7 @@ def get_user_cash(id):
         returns:
             - the current cash balance of the users account
         """
+        # connect to database query for user cash with the id provided
         conn = sqlite3.connect(DATABASE_NAME)
         conn.row_factory = sqlite3.Row
         cur = conn.cursor()
@@ -37,19 +37,35 @@ def get_user_cash(id):
         return cash 
 
 
-def update_user_cash(id, cash):
+def update_user_cash(id, amount, action):
         """Update the users cash balance in the database.
         
         inputs:
             - id: the users unique account id in the database
-            - cash: the users new cash balance
+            - amount: the amount to be added/removed from user accounts cash balance
+            - action: specify whether amount should be added or removed
         
         returns: None
         """
+        # get users current cash balance
+        current_cash_balance = get_user_cash(id)
+
+        # Determine new cash balance, if not valid type is entered return none
+        if action.lower() == "add":
+             new_cash_balance = current_cash_balance + amount
+        elif action.lower() == "remove":
+             new_cash_balance = current_cash_balance - amount
+        else:
+             return False
+        
+        # Connect to database
         conn = sqlite3.connect(DATABASE_NAME)
         cur = conn.cursor()
-        cur.execute("UPDATE users SET cash = ? WHERE id = ?", (cash, id))
+        cur.execute(             
+             "UPDATE users SET cash = ? WHERE id = ?", 
+             (new_cash_balance, session['user_id']))
         conn.commit()
+        cur.close()
 
 
 def get_stock(symbol):
@@ -63,12 +79,15 @@ def get_stock(symbol):
     """
     try:
         ticker = yf.Ticker(symbol)
-    except:
-        return None
+        stock_data = ticker.history(period="1d", interval="1m")
+        current_price = stock_data.iloc[-1].Close
+        open_price = stock_data.iloc[0].Open
+        yesterday_close = ticker.history(period="5d", interval="1d").iloc[-2].Close
+        change = ((current_price - yesterday_close) / yesterday_close) * 100
+        return {"symbol": symbol, "current_price": current_price, "open_price": open_price, "change": change}
     
-    stock_data = ticker.history(period="1d", interval="1m")
-    current_price = stock_data.iloc[-1].Close
-    return {"price": current_price, "symbol": symbol}
+    except:
+         return None
 
 
 def get_user_portfolio(id):
@@ -88,36 +107,39 @@ def get_user_portfolio(id):
     conn.row_factory = sqlite3.Row
     cur = conn.cursor()
     rows = cur.execute(
-        "SELECT symbol, SUM(shares) FROM transactions WHERE user_id = ? GROUP BY symbol"
-        , (id,)).fetchall()
+        "SELECT symbol, shares FROM holdings WHERE user_id = ?", 
+        (id,)).fetchall()
     
     stocks = []
-    portfolio_value = 0
+    invested_value = 0
     for row in rows:
         stock = get_stock(row['symbol'])
-
-        # Add number of shares of the stock and the value of the shares
-        stock['shares'] = row['SUM(shares)']
-        stock['total'] = round(stock['price'] * stock['shares'], 2)
-        stock['price'] = round(stock['price'], 2)
-
-        portfolio_value += stock['total']
-
-        stocks.append(stock)
     
-    cash = round(get_user_cash(id),2)
-    portfolio_value = round(portfolio_value, 2) + cash
+        # Add number of shares of the stock and the value of the shares
+        stock['symbol'] = row['symbol']
+        stock['shares'] = row['shares']
+        stock['total'] = stock['shares'] * stock['current_price']
+        stocks.append(stock)
+        invested_value += stock['total']
+    
+    cash = get_user_cash(id)
+    portfolio_value = cash + invested_value
+    profit = portfolio_value - 10000
+    percentage_change = ( profit /10000 ) * 100
 
-    return {'stocks': stocks, 'cash': cash, 'value': portfolio_value}
+    return {'stocks': stocks, 'cash': cash, 'invested_value': invested_value
+            , 'portfolio_value': portfolio_value, 'profit': profit, 
+            'percentage_change': percentage_change}
 
 
-def add_transaction(id, symbol, shares, price, time, type):
+def add_transaction(id, symbol, shares, value, time, transaction_type):
         """Add record of transaction to database.
         
         inputs:
             - id: user unique id
             - symbol: stock being bought/sold
             - shares: number of shares bought/sold
+            - value: value of shares being sold
             - time: date and time of transaction
             - type: the type of transaction (buy or sell)
         
@@ -127,12 +149,16 @@ def add_transaction(id, symbol, shares, price, time, type):
         conn.row_factory = sqlite3.Row
         cur = conn.cursor()
 
+        if transaction_type.upper() == "SELL":
+             shares = -1 * shares
+        
         cur.execute(
-            "INSERT INTO transactions (user_id, symbol, shares, price, type, datetime) VALUES (?, ?, ?, ?, ?, ?)",
-            (id, symbol.upper(), shares, price,type,time))
+            "INSERT INTO transactions (user_id, symbol, shares, value, datetime, type) VALUES (?, ?, ?, ?, ?, ?)",
+            (id, symbol.upper(), shares, value, time, transaction_type.upper()))
 
         conn.commit()
     
+
 def get_user_transactions(id):
     """Get all of the transactions of the user.
         
@@ -146,10 +172,75 @@ def get_user_transactions(id):
     conn.row_factory = sqlite3.Row
     cur = conn.cursor()
     transactions =cur.execute(
-         "SELECT symbol, shares, price, datetime FROM transactions WHERE user_id = ?",
+         "SELECT symbol, shares, value, datetime, type FROM transactions WHERE user_id = ?",
         (id,)).fetchall()
     
     return transactions
 
 
+def add_user_holdings(id, symbol, shares, price):
+    # Connect to database
+    conn = sqlite3.connect(DATABASE_NAME)
+    conn.row_factory = sqlite3.Row
+    cur = conn.cursor()
+
+    # Check to see if the user already has holdings in these shares
+    rows = cur.execute(
+         "SELECT shares, total_value FROM holdings WHERE user_id = ? AND symbol = ?",
+         (id, symbol)).fetchall()
     
+    
+    if len(rows) == 0:
+         cur.execute(
+              "INSERT INTO holdings (user_id, symbol, shares, total_value) VALUES (?, ?, ?, ?)",
+              (session['user_id'], symbol, shares, shares * price))
+
+    else:
+        new_shares = rows[0]['shares'] + shares
+        new_total_value = rows[0]['total_value'] + shares * price
+        cur.execute("UPDATE holdings SET shares = ?, total_value = ? WHERE user_id = ? AND symbol = ?",
+                    (new_shares, new_total_value, session['user_id'], symbol))
+
+    conn.commit()
+
+
+def remove_user_holdings(id, symbol, shares_to_remove, price):
+    # Connect to database
+    conn = sqlite3.connect(DATABASE_NAME)
+    conn.row_factory = sqlite3.Row
+    cur = conn.cursor()
+
+    # Check to see if the user already has holdings in these shares
+    rows = cur.execute(
+         "SELECT shares, total_value FROM holdings WHERE user_id = ? AND symbol = ?",
+         (id, symbol)).fetchall()
+    
+    current_shares = rows[0]['shares']
+    new_shares = current_shares - shares_to_remove
+
+    
+    if new_shares  < 0:
+        # if user has sold too many shares throw an error
+        flash('You have sold too many shares')
+        return False
+    elif new_shares == 0:
+        # if user has sold all shares of particular stock delete from table
+        cur.execute("DELETE FROM holdings WHERE user_id = ? AND symbol = ?", 
+                    (session['user_id'], symbol))
+    else:
+        # insert new values for the users position for this stock
+        new_total_value = price * new_shares
+        cur.execute("UPDATE holdings SET shares = ?, total_value = ? WHERE user_id = ? AND symbol = ?",
+                    (new_shares, new_total_value, session['user_id'], symbol))
+
+    conn.commit()
+
+
+def get_indexes():
+    index_symbols = ['^GSPC', '^IXIC', '^DJI','^FTSE']
+    indexes = []
+    for symbol in index_symbols:
+         index = get_stock(symbol)
+         indexes.append(index)
+
+    return indexes
