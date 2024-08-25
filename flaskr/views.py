@@ -1,15 +1,19 @@
 from flask import Blueprint, render_template, request, session, jsonify, flash, redirect
-from flaskr.helpers import login_required, get_stock, get_user_portfolio, get_user_cash, add_transaction
-from flaskr.helpers import update_user_cash, get_user_transactions, add_user_holdings, get_indexes, remove_user_holdings
 from datetime import datetime
 import yfinance as yf
 import pandas as pd
 import time
 import sqlite3 
 
+from .utils import (login_required,
+                   get_user_cash, update_user_cash,
+                   get_user_portfolio,
+                   get_user_transactions, add_user_transaction,
+                   add_user_shares, remove_user_shares,
+                   get_stock_data, get_indexes)
+
 views = Blueprint('views', __name__)
 
-TICKERS = ['AAPL', 'NFLX']
 DATABASE_NAME = 'flaskr/trade.db'
 
 @views.after_request
@@ -64,7 +68,7 @@ def buy():
             return redirect("/buy")
         
         # try to get the stock value
-        stock = get_stock(symbol)
+        stock = get_stock_data(symbol)
         print(stock)
         if stock is None:
             flash('Invalid Symbol')
@@ -82,10 +86,10 @@ def buy():
         
         # Get date and time (ISO 8601 format) and insert transaction record into db
         time = datetime.now().strftime("%d-%m-%Y %H:%M:%S")
-        add_transaction(user_id, symbol, shares, transaction_cost, time, 'Buy')
+        add_user_transaction(user_id, symbol, shares, transaction_cost, time, 'Buy')
 
         # Add stocks to the users holdings table
-        add_user_holdings(user_id, symbol, shares, price)
+        add_user_shares(user_id, symbol, shares, price)
 
         # Update cash in users table
         update_user_cash(user_id, transaction_cost, action="remove")
@@ -118,7 +122,7 @@ def sell():
             return redirect("/sell")
         
         # try to get the stock value
-        stock = get_stock(symbol)
+        stock = get_stock_data(symbol)
         print(stock)
         if stock is None:
             flash('Invalid Symbol')
@@ -133,10 +137,10 @@ def sell():
         # Get date and time (ISO 8601 format) and insert transaction record into db
         time = datetime.now().strftime("%d-%m-%Y %H:%M:%S")
         user_id = session["user_id"]
-        add_transaction(user_id, symbol, shares, value_shares, time, 'Sell')
+        add_user_transaction(user_id, symbol, shares, value_shares, time, 'Sell')
 
         # Remove shares from users holdings table
-        remove_user_holdings(user_id, symbol, shares, price)
+        remove_user_shares(user_id, symbol, shares, price)
 
         # Update users cash balance
         update_user_cash(user_id, value_shares, action="add")

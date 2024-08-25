@@ -1,22 +1,10 @@
-from flask import redirect, session, flash
-from functools import wraps
-import yfinance as yf
+# Functions used for modifying users stored data
+from flask import session
 import sqlite3
+from .market_utils import get_stock_data
+
 
 DATABASE_NAME = 'flaskr/trade.db'
-
-
-# Decorator for routes so that is login is required
-def login_required(orig_func):
-    # use wraps so that the decorated function still has the route name
-    @wraps(orig_func)
-    def decorated_function(*args, **kwargs):
-        print(session)
-        if session.get("user_id") is None:
-            return redirect("/login")
-        return orig_func(*args, **kwargs)
-    
-    return decorated_function
 
 
 def get_user_cash(id):
@@ -68,28 +56,6 @@ def update_user_cash(id, amount, action):
         cur.close()
 
 
-def get_stock(symbol):
-    """Get the current price of the stock.
-    
-    inputs:
-        - symbol: the stocks ticker symbol
-    
-    returns:
-        - dict containing the price and the symbol
-    """
-    try:
-        ticker = yf.Ticker(symbol)
-        stock_data = ticker.history(period="1d", interval="1m")
-        current_price = stock_data.iloc[-1].Close
-        open_price = stock_data.iloc[0].Open
-        yesterday_close = ticker.history(period="5d", interval="1d").iloc[-2].Close
-        change = ((current_price - yesterday_close) / yesterday_close) * 100
-        return {"symbol": symbol, "current_price": current_price, "open_price": open_price, "change": change}
-    
-    except:
-         return None
-
-
 def get_user_portfolio(id):
     """Get a summary of users portfolio data.
     
@@ -113,7 +79,7 @@ def get_user_portfolio(id):
     stocks = []
     invested_value = 0
     for row in rows:
-        stock = get_stock(row['symbol'])
+        stock = get_stock_data(row['symbol'])
     
         # Add number of shares of the stock and the value of the shares
         stock['symbol'] = row['symbol']
@@ -132,7 +98,26 @@ def get_user_portfolio(id):
             'percentage_change': percentage_change}
 
 
-def add_transaction(id, symbol, shares, value, time, transaction_type):
+def get_user_transactions(id):
+    """Get all of the transactions of the user.
+        
+        inputs:
+            - id: users unique id
+        
+        returns:
+            - list of dicts where each dict contains an individual transactions
+                info."""
+    conn = sqlite3.connect(DATABASE_NAME)
+    conn.row_factory = sqlite3.Row
+    cur = conn.cursor()
+    transactions =cur.execute(
+         "SELECT symbol, shares, value, datetime, type FROM transactions WHERE user_id = ?",
+        (id,)).fetchall()
+    
+    return transactions
+
+
+def add_user_transaction(id, symbol, shares, value, time, transaction_type):
         """Add record of transaction to database.
         
         inputs:
@@ -157,28 +142,9 @@ def add_transaction(id, symbol, shares, value, time, transaction_type):
             (id, symbol.upper(), shares, value, time, transaction_type.upper()))
 
         conn.commit()
-    
-
-def get_user_transactions(id):
-    """Get all of the transactions of the user.
-        
-        inputs:
-            - id: users unique id
-        
-        returns:
-            - list of dicts where each dict contains an individual transactions
-                info."""
-    conn = sqlite3.connect(DATABASE_NAME)
-    conn.row_factory = sqlite3.Row
-    cur = conn.cursor()
-    transactions =cur.execute(
-         "SELECT symbol, shares, value, datetime, type FROM transactions WHERE user_id = ?",
-        (id,)).fetchall()
-    
-    return transactions
 
 
-def add_user_holdings(id, symbol, shares, price):
+def add_user_shares(id, symbol, shares, price):
     # Connect to database
     conn = sqlite3.connect(DATABASE_NAME)
     conn.row_factory = sqlite3.Row
@@ -204,7 +170,7 @@ def add_user_holdings(id, symbol, shares, price):
     conn.commit()
 
 
-def remove_user_holdings(id, symbol, shares_to_remove, price):
+def remove_user_shares(id, symbol, shares_to_remove, price):
     # Connect to database
     conn = sqlite3.connect(DATABASE_NAME)
     conn.row_factory = sqlite3.Row
@@ -221,7 +187,6 @@ def remove_user_holdings(id, symbol, shares_to_remove, price):
     
     if new_shares  < 0:
         # if user has sold too many shares throw an error
-        flash('You have sold too many shares')
         return False
     elif new_shares == 0:
         # if user has sold all shares of particular stock delete from table
@@ -234,13 +199,3 @@ def remove_user_holdings(id, symbol, shares_to_remove, price):
                     (new_shares, new_total_value, session['user_id'], symbol))
 
     conn.commit()
-
-
-def get_indexes():
-    index_symbols = ['^GSPC', '^IXIC', '^DJI','^FTSE', '^HSI']
-    indexes = []
-    for symbol in index_symbols:
-         index = get_stock(symbol)
-         indexes.append(index)
-
-    return indexes

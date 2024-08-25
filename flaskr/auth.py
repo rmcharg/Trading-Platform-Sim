@@ -3,7 +3,7 @@ from werkzeug.security import generate_password_hash, check_password_hash
 import sqlite3
 from os import path
 from flask_session import Session
-from flaskr.helpers import login_required
+from .utils import login_required
 
 
 auth = Blueprint('auth', __name__)
