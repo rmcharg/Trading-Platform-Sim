@@ -142,7 +142,7 @@ def sell():
         update_user_cash(user_id, value_shares, action="add")
 
         flash('Stocks Sold !')
-        return render_template("sell.html")
+        return redirect("/portfolio")
 
 
 @views.route("/transactions")

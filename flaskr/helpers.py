@@ -237,7 +237,7 @@ def remove_user_holdings(id, symbol, shares_to_remove, price):
 
 
 def get_indexes():
-    index_symbols = ['^GSPC', '^IXIC', '^DJI','^FTSE']
+    index_symbols = ['^GSPC', '^IXIC', '^DJI','^FTSE', '^HSI']
     indexes = []
     for symbol in index_symbols:
          index = get_stock(symbol)
