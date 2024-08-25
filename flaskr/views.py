@@ -155,6 +155,7 @@ def transactions():
     transactions = get_user_transactions(session['user_id'])
     return render_template("transactions.html", transactions=transactions)
 
+
 @views.route('/get_dashboard_data')
 @login_required
 def get_dashboard_data():
@@ -163,6 +164,11 @@ def get_dashboard_data():
 
     return jsonify(data)
 
+
+@views.route("/stock_tracker.html")
+@login_required
+def stock_tracker():
+    return render_template("stock_tracker.html")
 
 
         
