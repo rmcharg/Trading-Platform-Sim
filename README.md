@@ -1,6 +1,6 @@
 # PyTrade
 ## Introduction
-PyTrade is a trading simulator allowing users to interact with real time market data. This web application allows users to create accounts, buy/sell shares and track the behaviour of chosen stocks over custom periods of time. This project was built for the final project requirement of Harvards CS50 Introduction to Computer Science Course.
+PyTrade is a trading simulator allowing users to interact with real time market data and make investment decisions without risking real cash. This web application allows users to create accounts, buy/sell shares and track the behaviour of chosen stocks over custom periods of time. This project was built for the final project requirement of Harvards CS50 Introduction to Computer Science Course.
 
 ## Description
 This project allows users to manage a portfolio of stocks over time interacting with real time market data. The application allows users to view:
