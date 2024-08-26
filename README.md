@@ -16,6 +16,11 @@ Each user starts with $10,000 cash to invest in the market, as the user stock ho
 - Additional information to be added to stock tracker page (open, high, low, mktcap, 52wk high etc.).
 - Additional plotting choices e.g candlestick charts as well as plotting stock volume.
 
+## Technologies Used
+- Front End: Bootstrap, JavaScript, Jinja
+- Back End: Flask, Python
+- Database: SQLite
+- API: yfinance
 
 ## Demo
 
