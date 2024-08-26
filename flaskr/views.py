@@ -1,9 +1,13 @@
 from flask import Blueprint, render_template, request, session, jsonify, flash, redirect
-from datetime import datetime
+from datetime import datetime, timedelta
 import yfinance as yf
 import pandas as pd
 import time
 import sqlite3 
+import plotly
+import plotly.express as px
+import json
+
 
 from .utils import (login_required,
                    get_user_cash, update_user_cash,
@@ -165,10 +169,43 @@ def get_dashboard_data():
     return jsonify(data)
 
 
-@views.route("/stock_tracker.html")
+@views.route("/stock_tracker", methods=["GET", "POST"])
 @login_required
 def stock_tracker():
-    return render_template("stock_tracker.html")
+    if request.method == "GET":
+        return render_template("stock_tracker.html")
+    else:
+        symbol = request.form.get("symbol").upper()
+        period = request.form.get("period")
+        end_date = datetime.now()
+
+        # Calculate the start time depending on the user choice
+        if period == "5d":
+             interval = "30m"
+        elif period == "6mo":
+            interval = "1d"
+        elif period == "1y":
+            interval = "1d"
+        else:
+            interval = "5d"
+
+        # Check if the stock symbol is valid
+        try:
+            stock = yf.Ticker(symbol)
+        except:
+            flash('Invalid Symbol')
+            return redirect("/stock_tracker")
+        
+        # Get data over specified period
+        df = stock.history(period = period, interval = interval, prepost=True)
+
+        # Create figure and convert to json
+        fig = px.line(df, x = df.index, y = df['Close'], 
+                      title = f"{symbol} stock history (period = {period})", 
+                      template="plotly_dark")
+        
+        graphJSON = fig.to_json()
+    return render_template("stock_tracker.html", graphJSON=graphJSON)
 
 
         
