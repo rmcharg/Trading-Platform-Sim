@@ -9,7 +9,12 @@ This project allows users to manage a portfolio of stocks over time interacting 
 - Current value of each stock in the users portfolio.
 - Current value and trend of key stock market indexes.
 - Graphs of any stocks performance over a chosen period of time.
+Each user starts with $10,000 cash to invest in the market, as the user stock holdings change value, the total value of their portfolio will change as well. This simulated buying and selling of stocks allows for the user to practice 'investing' without risking any real cash.
 
+## Future Changes
+- Real time graphing of stock performance in an individual day.
+- Additional information to be added to stock tracker page (open, high, low, mktcap, 52wk high etc.).
+- Additional plotting choices e.g candlestick charts as well as plotting stock volume.
 
 
 ## Demo
