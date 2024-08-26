@@ -9,3 +9,6 @@ This project allows users to manage a portfolio of stocks over time interacting 
 - Current value of each stock in the users portfolio.
 - Current value and trend of key stock market indexes.
 - Graphs of any stocks performance over a chosen period of time.
+
+https://github.com/user-attachments/assets/458a2788-ba3e-4dd6-ad8f-bf30f81e3549
+
