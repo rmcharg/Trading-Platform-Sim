@@ -15,13 +15,35 @@ def get_stock_data(symbol):
             - % change from yesterdays closing price
     """
     try:
+        # Get ticker from API
         ticker = yf.Ticker(symbol)
-        stock_data = ticker.history(period="1d", interval="1m")
-        current_price = stock_data.iloc[-1].Close
-        open_price = stock_data.iloc[0].Open
-        yesterday_close = ticker.history(period="5d", interval="1d").iloc[-2].Close
+
+        # Extract relevant stock information from ticker
+        stock_history = ticker.history(period="1d", interval="1m", prepost=True)
+        stock_info = ticker.info
+
+        # Calculate change in price today
+        current_price = stock_history.iloc[-1].Close
+        open_price = stock_history.iloc[0].Open
+        yesterday_close = stock_info['previousClose']
         change = ((current_price - yesterday_close) / yesterday_close) * 100
-        return {"symbol": symbol, "current_price": current_price, "open_price": open_price, "change": change}
+
+        stock_data = {
+            "symbol": symbol,
+            "current_price": current_price,
+            "open_price": open_price,
+            "change": change,
+            "previous_close": yesterday_close,
+            "Name": stock_info["shortName"],
+            "market_cap": stock_info["marketCap"],
+            "volume": stock_info["volume"],
+            "average_volume": stock_info["averageVolume"],
+            "day_low": stock_info["dayLow"],
+            "day_high": stock_info["dayHigh"],
+            "year_low": stock_info["fiftyTwoWeekLow"],
+            "year_high": stock_info["fiftyTwoWeekHigh"]
+        }
+        return stock_data
     
     except:
          return None

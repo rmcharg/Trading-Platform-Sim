@@ -37,7 +37,7 @@ def index():
     """
     portfolio = get_user_portfolio(session['user_id'])
     indexes = get_indexes()
-    return render_template("index.html", portfolio = portfolio, indexes=indexes)
+    return render_template("index.html", portfolio = portfolio)
 
 
 @views.route("/portfolio")
@@ -183,7 +183,7 @@ def stock_tracker():
         if period == "1d":
             interval = "1m"
         elif period == "5d":
-             interval = "15m"
+             interval = "5m"
         elif period == "6mo":
             interval = "1d"
         elif period == "1y":
@@ -198,18 +198,25 @@ def stock_tracker():
             flash('Invalid Symbol')
             return redirect("/stock_tracker")
         
-        # Get data over specified period
+        # Get data over specified period and general stock info
         df = stock.history(period = period, interval = interval, prepost=True)
+        stock_data = get_stock_data(symbol)
 
         # Create figure and convert to json
         fig = px.line(df, x = df.index, y = df['Close'], 
                       title = f"{symbol} stock history (period = {period})", 
-                      template="plotly_dark")
+                      template="plotly_dark",
+                      labels={
+                          "Close": "",
+                          "Datetime": "Date and Time (ET)"
+                      })
         fig.update_layout(autosize=True)
+        fig.add_hline(y=stock_data['current_price'], line_width=3, line_dash='dash', line_color='red')
         
+        print(stock_data['previous_close'])
         graphJSON = fig.to_json()
     return render_template("stock_tracker.html", graphJSON=graphJSON, 
-                           stock_info=get_stock_data(symbol))
+                           stock_data=stock_data)
 
 
         

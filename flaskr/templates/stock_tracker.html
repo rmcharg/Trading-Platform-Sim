@@ -28,17 +28,43 @@
 
 {% if graphJSON %}
 
-<div class="card bg-dark mb-5 w-75">
-    <div class="card-header text-start" >
-        <h6>Stock: {{stock_info['symbol']}} </h5>
-        <h6>Current Price: {{ "$%.2f" | format(stock_info['current_price']) }} </h5>
-        <h6>Change: {{ "%.2f%%" | format(stock_info['change']) }}</h5>
+<div class="container-fluid">
+    <div class="row justify-content-md-center">
+        <div class="card bg-dark mb-5 w-75">
+            <div class="card-header text-start" >
+                <h4>{{stock_data['Name'] }}({{stock_data['symbol']}}) </h4>
+                {% if stock_data['change'] > 0 %}
+                    <h5 id="price">{{ "$%.2f" | format(stock_data['current_price']) }} ({{ "+%.2f%%" | format(stock_data['change']) }}) </h5>
+                {% else %}
+                    <h5 id="price">{{ "$%.2f" | format(stock_data['current_price']) }} ({{ "%.2f%%" | format(stock_data['change']) }}) </h5>
+                {% endif %}
+                
         
-    </div>
-    <div class="card-body">
-        <div class = "container-fluid ">
-            <div id="chart" class="chart-responsive">
             </div>
+            <div class="card-body">
+                <div class = "container-fluid ">
+                    <div id="chart" class="chart-responsive">
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="card bg-dark mb-5 w-25">
+            <div class="card-header text-center">
+                <h5> Information </h5>
+            </div>
+            <div class="card-body text-start">
+                <p> Previous Close: {{ "$%.2f" | format(stock_data['previous_close']) }}</p>
+                <p> Open: {{ "$%.2f" | format(stock_data['open_price']) }}</p>
+                <p> Day Low: {{ "$%.2f" | format(stock_data['day_low']) }}</p>
+                <p> Day High: {{ "$%.2f" | format(stock_data['day_high']) }}</p>
+                <p> 52 Week Low: {{ "$%.2f" | format(stock_data['year_low']) }}</p>
+                <p> 52 Week High: {{ "$%.2f" | format(stock_data['year_high']) }}</p>
+                <p> Volume: {{ "$%.2f" | format(stock_data['volume']) }}</p>
+                <p> Avg. Volume: {{ "$%.2f" | format(stock_data['average_volume']) }}</p>
+                <p> Market Cap: {{ "$%.2f" | format(stock_data['market_cap']) }}</p>
+            </div>
+
         </div>
     </div>
 </div>
@@ -50,11 +76,27 @@
 
 
 
+
 <script type="text/javascript" data-graph = "{{ graphJSON }}"> 
     var graph = document.currentScript.dataset.graph;
     var figure = JSON.parse(graph)
-    console.log(figure)
     Plotly.newPlot('chart', figure.data, figure.layout, {responsive: true});
+</script>
+
+<script type="text/javascript">
+    var change = "{{stock_data['change']}}"
+    if (change > 0){
+        document.getElementById("price").style.color = 'green';
+    }
+    else if (change < 0){
+        document.getElementById("price").style.color = 'red';
+    }
+    else{
+        document.getElementById("price").style.color = 'white';
+    }
+
+    var previous = "{{ stock_data['previous_close'] }}";
+    console.log(previous)
 </script>
 {% endif%}
 {% endblock %}
