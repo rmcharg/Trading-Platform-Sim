@@ -24,5 +24,9 @@ Each user starts with $10,000 cash to invest in the market, as the user stock ho
 
 ## Demo
 
-https://github.com/user-attachments/assets/7f831c97-bab7-4664-b021-da68c8b48928
+
+https://github.com/user-attachments/assets/89dee4fc-5841-4b60-ac67-abb9b1254d4a
+
+
+
 
