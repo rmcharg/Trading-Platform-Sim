@@ -180,8 +180,10 @@ def stock_tracker():
         end_date = datetime.now()
 
         # Calculate the start time depending on the user choice
-        if period == "5d":
-             interval = "30m"
+        if period == "1d":
+            interval = "1m"
+        elif period == "5d":
+             interval = "15m"
         elif period == "6mo":
             interval = "1d"
         elif period == "1y":
@@ -203,9 +205,11 @@ def stock_tracker():
         fig = px.line(df, x = df.index, y = df['Close'], 
                       title = f"{symbol} stock history (period = {period})", 
                       template="plotly_dark")
+        fig.update_layout(autosize=True)
         
         graphJSON = fig.to_json()
-    return render_template("stock_tracker.html", graphJSON=graphJSON)
+    return render_template("stock_tracker.html", graphJSON=graphJSON, 
+                           stock_info=get_stock_data(symbol))
 
 
         
