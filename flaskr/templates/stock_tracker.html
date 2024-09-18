@@ -4,33 +4,57 @@
 <h3> Track Stock </h3>
 
 
-<form class method="post" action="/stock_tracker">
-    <div class="form-group mb-2">
-        <input type="text" class="form-control mb-3 mx-auto w-auto" name="symbol" placeholder="Enter Stock" required>
+
+<form  method="post" action="/stock_tracker">
+    <div class="row align-items-start mt-5">
+        <div class="col-auto">
+            <input type="text" class="form-control mb-3 mx-auto w-auto" name="symbol" placeholder="Enter Stock" required>
+        </div>
+        <div class="col-auto">
+            <select class="form-select mx-auto w-auto mb-3" name="period">
+                <option value="1d"> 1 day </option>
+                <option value="5d"> 5 days </option>
+                <option value="6mo"> 6 months </option>
+                <option value="1y"> 1 Year</option>
+                <option value="5y"> 5 Years</option>
+            </select>
+        </div>
+        <div class="col-auto">
+            <button type="submit" class="btn btn-primary">Track</button>
+        </div>
     </div>
-    <select class="form-select mx-auto w-auto mb-3" name="period">
-        <option value="5d"> 5 days </option>
-        <option value="6mo"> 6 months </option>
-        <option value="1y"> 1 Year</option>
-        <option value="5y"> 5 Years</option>
-
-    </select>
-</div>
-
-    <button type="submit" class="btn btn-primary">Track</button>
 </form>
 
 
 {% if graphJSON %}
-<div class = "container-fluid w-75 mt-3">
-    <div id="chart" class="chart">
+
+<div class="card bg-dark mb-5 w-75">
+    <div class="card-header text-start" >
+        <h6>Stock: {{stock_info['symbol']}} </h5>
+        <h6>Current Price: {{ "$%.2f" | format(stock_info['current_price']) }} </h5>
+        <h6>Change: {{ "%.2f%%" | format(stock_info['change']) }}</h5>
+        
+    </div>
+    <div class="card-body">
+        <div class = "container-fluid ">
+            <div id="chart" class="chart-responsive">
+            </div>
+        </div>
     </div>
 </div>
+
+
+
+
+
+
+
 
 <script type="text/javascript" data-graph = "{{ graphJSON }}"> 
     var graph = document.currentScript.dataset.graph;
     var figure = JSON.parse(graph)
-    Plotly.react('chart', figure, {});
+    console.log(figure)
+    Plotly.newPlot('chart', figure.data, figure.layout, {responsive: true});
 </script>
 {% endif%}
 {% endblock %}
