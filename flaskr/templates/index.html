@@ -36,7 +36,7 @@
 
       <div class="container-fluid">
         <div class="row justify-content-md-center">
-          <div class="card text-white bg-dark mb-3 w-50 mx-3">
+          <div class="card text-white bg-dark mb-3 w-75 mx-3">
             <div class="card-header">
               <h5> Your Stocks </h5>
             </div>
@@ -47,6 +47,7 @@
               
                       <th scope = "col"> Symbol </th>
                       <th scope = "col"> Shares </th>
+                      <th scope = "col"> Open </th>
                       <th scope = "col"> Price </th>
                       <th scope = "col"> Change </th>
                   </thead>
@@ -54,38 +55,13 @@
                     {% if portfolio %}
                     {% for stock in portfolio['stocks'] %}
                     <tr>
+                        {% if stock %}
                         <td class="text-center">{{ stock['symbol'] }}</td>
                         <td class="text-center"> {{ stock['shares'] }}</td>
+                        <td class="text-center"> {{ "$%.2f" | format(stock['open_price'])  }}</td>
                         <td class="text-center" id = "{{stock['symbol']}}-price"> {{ "$%.2f" | format(stock['current_price'])  }}</td>
                         <td class="text-center" id = "{{stock['symbol']}}-change"> {{ "%.2f%%" | format(stock['change'])  }}</td>
-                    </tr>
-                    {% endfor %}
-                    {% endif %}
-                  </tbody>
-              </table>
-              </div>
-              
-            </div>
-          </div>
-      
-          <div class="card bg-dark mb-5 w-25">
-            <div class="card-body">
-              <h5 class="card-title"> Indexes </h5>
-              <div class="table-responsive">
-                <table class="table table-dark" id="indexTableId">
-                  <thead> 
-              
-                      <th scope = "col"> Symbol </th>
-                      <th scope = "col"> Price </th>
-                      <th scope = "col"> Change </th>
-                  </thead>
-                  <tbody id="indexBodyId">
-                    {% if indexes  %}
-                    {% for index in indexes %}
-                    <tr>
-                        <td class="text-center">{{ index['symbol'] }}</td>
-                        <td class="text-center" id="{{index['symbol']}}-price"> {{ "$%.2f" | format(index['current_price'])  }}</td>
-                        <td class="text-center" id ="{{index['symbol']}}-change"> {{ "%.2f%%" | format(index['change'])  }}</td>
+                        {% endif %}
                     </tr>
                     {% endfor %}
                     {% endif %}
